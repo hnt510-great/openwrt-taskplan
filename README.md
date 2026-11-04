@@ -1,151 +1,101 @@
-![hello](https://views.whatilearened.today/views/github/sirpdboy/deplives.svg) [![](https://img.shields.io/badge/TGGroup-ClickJoin-FFFFFF.svg)](https://t.me/joinchat/AAAAAEpRF88NfOK5vBXGBQ)
+# DDNS-Go feed（taskplan）
 
-<h1 align="center">
-  <br>DDNS GO<br>
-</h1>
-<p align="center">
-<a href="https://openwrt.org"><img alt="OpenWrt" src="https://img.shields.io/badge/OpenWrt-%E2%89%A519.07-ff0000?logo=openwrt&logoColor=white"></a>
-<a href="https://www.google.com/chrome/"><img alt="Chrome" src="https://img.shields.io/badge/Chrome-%E2%89%A5111-4285F3?logo=googlechrome&logoColor=white"></a>
-<a href="https://www.apple.com/safari/"><img alt="Safari" src="https://img.shields.io/badge/Safari-%E2%89%A516.4-000000?logo=safari&logoColor=white"></a>
-<a href="https://www.mozilla.org/firefox/"><img alt="Firefox" src="https://img.shields.io/badge/Firefox-%E2%89%A5128-FF7138?logo=firefoxbrowser&logoColor=white"></a>
-  <a href="https://github.com/sirpdboy/luci-app-ddns-go/releases/latest"><img alt="GitHub release" src="https://img.shields.io/github/v/release/sirpdboy/luci-app-ddns-go"></a>
-  <a href="https://github.com/sirpdboy/luci-app-ddns-go/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/sirpdboy/luci-app-ddns-go/total?cacheSeconds=1"></a>
-</p>
+本仓库是 [hnt510-great/openwrt](https://github.com/hnt510-great/openwrt) 定制主树使用的私有源码 feed。
+项目面向 x86_64/glibc、APK、原生 systemd 和 GNOME 桌面；软件选择以主树
+保存的完整配置为准。
 
-[中文](README_CN.md) | English
+| 项目 | 值 |
+| --- | --- |
+| Feed 名称 | `taskplan` |
+| 本仓库分支 | `main` |
+| 原始上游 | [https://github.com/sirpdboy/luci-app-ddns-go](https://github.com/sirpdboy/luci-app-ddns-go)（`main`） |
 
-![screenshots](https://raw.githubusercontent.com/sirpdboy/openwrt/master/doc/说明1.jpg)
+`taskplan` 是主树沿用的 feed 名称，本仓库实际提供动态 DNS 服务及其 LuCI
+界面，不是主机定时维护框架。
 
-Please read this page carefully, which includes precautions and instructions on how to use it.
+| 配方目录 | 用途 |
+| --- | --- |
+| `ddns-go/` | 构建 DDNS-Go 服务，更新域名对应的 IPv4/IPv6 地址 |
+| `luci-app-ddns-go/` | DDNS-Go 的 LuCI 配置界面，依赖 `ddns-go` |
 
-## Function Description:
+## 与主树的集成
 
-### Ddns go dynamic domain plugin
-#### Automatically obtain your public IPv4 or IPv6 address and resolve it to the corresponding domain name service.
+`ddns-go` 配方使用 `packages` feed 中的 Go 构建工具，LuCI 配方使用 `luci`
+feed 的构建规则。完整主树的 feeds 配置已经包含这些依赖。
 
-## release note
+原生 systemd 的服务验证记录包含 `ddns-go`；这说明其纳入了服务监督检查，
+不代表已经验证每一种 DNS 服务商或现网域名。请在设备上单独配置域名、服务商
+授权及访问权限，个人配置不应写入源码仓库。
 
-## 2026.3.12  luci-app-ddns-go 1.6.7
- - 1.Fix Chinese update interval (seconds) display. 
- - 2.Add IPK and APK installation packages for ddns go
- - 3.Kernel updated to 6.16.2
+主树的 scheduled maintenance 是另一套主机侧工具，目前保持停用；更新本
+feed 不会安装或启用那套维护任务。docs 尚未提供独立的 DDNS 服务商配置与
+端到端验收指南，具体应用配置应结合当前配方和上游项目说明。
 
-## 2026.1.23  luci-app-ddns-go 1.6.5
- - 1.Fixed the issue of being unable to obtain the IPv6 prefix. 
- - 2.The logs are now sorted with the latest ones at the top.
- - 3.Kernel updated to 6.15.0
- 
-## 2025.10.25  luci-app-ddns-go 1.6.3
- -   1.Add version number check function
- -  2.Add upgraded kernel functionality
- -  3.Add the function of resetting user passwords,username:admin ,password:admin12345
- -  4.Kernel updated to 6.13.0
+## 获取与构建
 
-## 2025.5.14  luci-app-ddns-go 1.5.2
+先在构建机登录有权访问全部私有仓库的 GitHub 账号，再获取完整主树：
 
-## 2025.5.12  luci-app-ddns-go 1.5.1
-- Update log:
-- Compatible with the latest OPENWRT24.10, JS version. The old version 18.06 uses LUA branch.
+```sh
+gh auth login --hostname github.com --git-protocol https --web
+gh auth setup-git
+git clone https://github.com/hnt510-great/openwrt.git
+cd openwrt
+./scripts/feeds update -a
+./scripts/feeds install -a
+```
 
+主树 `feeds.conf.default` 已包含：
 
-## characteristic
+```text
+src-git taskplan https://github.com/hnt510-great/openwrt-taskplan.git;main
+```
 
-- Supports Mac, Windows, Linux systems, ARM, x86 architecture
-- Supported Domain Name Service Providers: AliDNS, Dnpod, Cloudflare, Huawei Cloud, callbacks, Baidu Cloud, porkbun, GoDaddy`
-- Support interface/network card to obtain IP
-- Support running as a service
-- Default synchronization interval of 5 minutes
-- Supporting simultaneous resolution of multiple domain names, a must-have for companies
-- Support multi-level domain names
-- Configure on the webpage, simple and convenient, can set 'login username and password'/'prohibit access from the public network'`
-- Convenient and quick viewing of the last 50 logs on the webpage, without the need to run Docker to view them
-- Support webhook notifications
-- Supports TTL
-- Support some DNS service providers to pass custom parameters and achieve functions such as region resolution
+在现有主树中只更新本 feed，可执行：
 
-## Usage
+```sh
+./scripts/feeds update taskplan
+./scripts/feeds install -a -p taskplan
+```
 
-Method for adding luci-app-ddns-go to LEDE/OpenWRT source code.
+先在主树配置中选择所需包并运行 `make defconfig`。单包构建示例：
 
-### Method for downloading source code one:
-Edit the root directory of the source code folder 'feeds.comnf.defect' and add the following content:
+```sh
+make package/feeds/taskplan/luci-app-ddns-go/compile V=s
+```
 
-```Brach
-    # feeds Get source code：
-    src-git taskplan  https://github.com/sirpdboy/luci-app-ddns-go
- ``` 
-  ```Brach
-   # Update feeds and install themes:
-    scripts/feeds update ddns-go
-	scripts/feeds install luci-app-ddns-go
- ``` 	
+以上命令均从主树根目录运行。保留已有 `.config`；新 checkout 的配置恢复
+步骤见 [本地构建指南](https://github.com/hnt510-great/openwrt/blob/main/docs/local-build.md)。`install` 安装的是构建配方链接，
+不会在设备上安装软件。完整 `update -a` 还会检查并可能修改主树的 custom 配方。
 
-### Method for downloading source code two:
- ```Brach
-    # downloading
-    git clone https://github.com/sirpdboy/luci-app-ddns-go package/ddns-go
-    make menuconfig
- ``` 
-### Configuration Menu
- ```Brach
-    make menuconfig
-	# find LuCI -> Applications, select luci-app-ddns-go, save and exit
- ``` 
-### compile
- ```Brach 
-    # compile
-    make package/ddns-go/luci-app-ddns-go/compile V=s
- ```
+## 维护与验证
 
+`origin` 指向本私有仓库。新 clone 需要合并原始上游时，先添加一次 `upstream`：
 
+```sh
+git -C feeds/taskplan remote add upstream https://github.com/sirpdboy/luci-app-ddns-go.git
+git -C feeds/taskplan fetch upstream
+git -C feeds/taskplan merge upstream/main
+# 审阅、解决冲突并完成相关验证后推送
+git -C feeds/taskplan push origin main
+```
 
-## describe
+已有 `upstream` 时跳过添加命令。`scripts/feeds update` 拉取本私有分支，
+不会自动合并原始上游。本地集成修改与主树的提交分别管理，保留现有提交、
+stash 和未提交文件。主树的 `patches/feeds/` 和功能清单是历史备份，
+不要向已经包含修改的 feed 重复应用补丁。
 
-- Source code source：https://github.com/sirpdboy/luci-app-ddns-go
-- Source code source：https://github.com/jeessy2/ddns-go.git
-- Source code source：https://github.com/immortalwrt/packages/tree/master/net/ddns-go
+涉及已发布 APK 内容的修改必须产生新包版本，不能覆盖同一包身份。源码
+检查、包构建、VM 与物理设备验证应分别记录；本文汇总已有设计和验证记录，
+不新增构建或设备验证结论。私有源码托管说明见
+[GitHub 源码托管](https://github.com/hnt510-great/openwrt/blob/main/docs/github-source-hosting.md)。
 
-![screenshots](https://raw.githubusercontent.com/sirpdboy/openwrt/master/doc/说明2.jpg)
+## 设计与验证文档
 
+- [原生服务监督](https://github.com/hnt510-great/openwrt/blob/main/docs/systemd-native-supervision.md)
+- [服务监督验证（含 ddns-go）](https://github.com/hnt510-great/openwrt/blob/main/docs/systemd-native-supervision-validation.md)
+- [主机定时维护的停用状态](https://github.com/hnt510-great/openwrt/blob/main/docs/scheduled-maintenance.md)
 
-## interface
+## 许可与上游
 
-![screenshots](./doc/ddnsgo1.png)
-
-![screenshots](./doc/ddnsgo2.png)
-
-![screenshots](./doc/ddnsgo3.png)
-
-![screenshots](./doc/ddnsgo4.png)
-
-
-# My other project
-
-- Watch Dog ： https://github.com/sirpdboy/luci-app-watchdog
-- Net Speedtest ： https://github.com/sirpdboy/luci-app-netspeedtest
-- Task Plan : https://github.com/sirpdboy/luci-app-taskplan
-- Power Off Device : https://github.com/sirpdboy/luci-app-poweroffdevice
-- OpentoPD Theme : https://github.com/sirpdboy/luci-theme-opentopd
-- Ku Cat Theme : https://github.com/sirpdboy/luci-theme-kucat
-- Ku Cat Theme Config : https://github.com/sirpdboy/luci-app-kucat-config
-- NFT Time Control : https://github.com/sirpdboy/luci-app-timecontrol
-- Parent Control: https://github.com/sirpdboy/luci-theme-parentcontrol
-- Eqos Plus: https://github.com/sirpdboy/luci-app-eqosplus
-- Advanced : https://github.com/sirpdboy/luci-app-advanced
-- ddns-go : https://github.com/sirpdboy/luci-app-ddns-go
-- Advanced Plus）: https://github.com/sirpdboy/luci-app-advancedplus
-- Net Wizard: https://github.com/sirpdboy/luci-app-netwizard
-- Part Exp: https://github.com/sirpdboy/luci-app-partexp
-- Lukcy: https://github.com/sirpdboy/luci-app-lukcy
-
-## HELP
-
-|     <img src="https://img.shields.io/badge/-Alipay-F5F5F5.svg" href="#赞助支持本项目-" height="25" alt="图飞了"/>  |  <img src="https://img.shields.io/badge/-WeChat-F5F5F5.svg" height="25" alt="图飞了" href="#赞助支持本项目-"/>  | 
-| :-----------------: | :-------------: |
-|![xm1](https://raw.githubusercontent.com/sirpdboy/openwrt/master/doc/支付宝.png) | ![xm1](https://raw.githubusercontent.com/sirpdboy/openwrt/master/doc/微信.png) |
-
-<a href="#readme">
-    <img src="https://img.shields.io/badge/-TOP-orange.svg" alt="no" title="Return TOP" align="right"/>
-</a>
-
-![hello](https://visitor-badge-deno.deno.dev/sirpdboy.sirpdboy.svg) [![](https://img.shields.io/badge/TGGroup-ClickJoin-FFFFFF.svg)](https://t.me/joinchat/AAAAAEpRF88NfOK5vBXGBQ)
+保留上游版权和许可。各软件包源码的许可按其配方 `PKG_LICENSE` 及源码声明执行。
+仓库许可声明见 [LICENSE](LICENSE)。
