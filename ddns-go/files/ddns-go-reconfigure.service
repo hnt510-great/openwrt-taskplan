@@ -1,0 +1,10 @@
+[Unit]
+Description=Apply changed ddns-go configuration
+After=network-online.target
+# File edits must not permanently disable the path watcher.
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+Slice=auxiliary.slice
+ExecStart=/usr/libexec/ddns-go-systemd reconcile

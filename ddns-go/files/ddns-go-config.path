@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch ddns-go configuration inputs
+
+[Path]
+PathChanged=/etc/config/ddns-go
+Unit=ddns-go-reconfigure.service
+
+[Install]
+WantedBy=multi-user.target
