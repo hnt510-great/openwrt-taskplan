@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ddns-go
 PKG_VERSION:=6.17.1
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/jeessy2/ddns-go/tar.gz/v$(PKG_VERSION)?
@@ -55,7 +55,7 @@ define Package/ddns-go/install
 	
 	$(INSTALL_DIR) $(1)/usr/libexec $(1)/etc/init.d $(1)/etc/config
 	$(INSTALL_DATA) $(CURDIR)/files/ddns-go-config.sh $(1)/usr/libexec/ddns-go-config.sh
-	$(INSTALL_BIN) $(CURDIR)/files/ddns-go.init $(1)/etc/init.d/ddns-go
+	$(INSTALL_BIN) $(CURDIR)/files/$(if $(CONFIG_OPENWRT_SYSTEMD),ddns-go-native.init,ddns-go.init) $(1)/etc/init.d/ddns-go
 	$(INSTALL_CONF) $(CURDIR)/files/ddns-go.conf $(1)/etc/config/ddns-go
 	$(if $(CONFIG_OPENWRT_SYSTEMD),$(call Package/ddns-go/install-systemd,$(1)))
 endef

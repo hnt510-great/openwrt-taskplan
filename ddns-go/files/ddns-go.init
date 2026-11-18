@@ -9,15 +9,6 @@
 
 START=99
 
-# The native manager owns the daemon. rc.d remains for recovery boots.
-if [ -z "$IPKG_INSTROOT" ] && [ -d /run/systemd/system ] &&
-   [ -f /usr/lib/systemd/system/ddns-go.service ]; then
-	case "$action" in
-		boot|shutdown) exit 0 ;;
-		help|depends) ;;
-		*) exec /usr/libexec/ddns-go-systemd "$action" "$@" ;;
-	esac
-fi
 
 USE_PROCD=1
 NAME=ddns-go
