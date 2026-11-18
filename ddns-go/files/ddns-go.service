@@ -1,0 +1,25 @@
+[Unit]
+Description=Simple and easy-to-use DDNS tool (ddns-go)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+Slice=auxiliary.slice
+User=ddns-go
+Group=ddns-go
+RuntimeDirectory=ddns-go
+RuntimeDirectoryMode=0755
+ExecCondition=+/usr/libexec/ddns-go-systemd condition
+ExecStartPre=+/usr/libexec/ddns-go-systemd prepare
+ExecStart=/usr/libexec/ddns-go-systemd run
+Restart=on-failure
+RestartSec=5s
+KillMode=control-group
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=multi-user.target
+Also=ddns-go-config.path

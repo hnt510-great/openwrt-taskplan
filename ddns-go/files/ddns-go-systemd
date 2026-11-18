@@ -1,0 +1,70 @@
+#!/bin/sh
+# Native lifecycle adapter and foreground exec; systemd supervises ddns-go.
+. /usr/libexec/ddns-go-config.sh
+
+DDNS_GO_ENV=/run/ddns-go/env
+
+write_env() {
+	mkdir -p /run/ddns-go
+	chmod 755 /run/ddns-go
+	{
+		printf "DDNS_GO_DELAY='%s'\n" "$DDNS_GO_DELAY"
+		printf "DDNS_GO_ARGS='%s'\n" "$DDNS_GO_ARGS"
+	} > "$DDNS_GO_ENV.tmp.$$"
+	chmod 644 "$DDNS_GO_ENV.tmp.$$"
+	mv -f "$DDNS_GO_ENV.tmp.$$" "$DDNS_GO_ENV"
+}
+
+case "$1" in
+condition)
+	ddns_go_load
+	;;
+prepare)
+	ddns_go_load || exit 1
+	ddns_go_init_yaml
+	write_env
+	;;
+run)
+	if [ -r "$DDNS_GO_ENV" ]; then
+		. "$DDNS_GO_ENV"
+	else
+		ddns_go_load || exit 1
+	fi
+	case "$DDNS_GO_DELAY" in
+		''|*[!0-9]*) ;;
+		*)
+			if [ "$DDNS_GO_DELAY" -gt 0 ] && [ -r /proc/uptime ]; then
+				uptime=$(awk -F. '{print $1}' /proc/uptime)
+				[ "${uptime:-120}" -lt 120 ] && sleep "$DDNS_GO_DELAY"
+			fi
+		;;
+	esac
+	# shellcheck disable=SC2086
+	exec /usr/bin/ddns-go $DDNS_GO_ARGS
+	;;
+start|stop|restart|status)
+	exec systemctl "$1" ddns-go.service
+	;;
+reload|reconcile)
+	if ddns_go_load; then
+		systemctl reset-failed ddns-go.service || exit 1
+		exec systemctl --no-block restart ddns-go.service
+	fi
+	if systemctl is-active --quiet ddns-go.service; then
+		exec systemctl --no-block stop ddns-go.service
+	fi
+	exit 0
+	;;
+running)
+	exec systemctl is-active --quiet ddns-go.service
+	;;
+enable|disable)
+	exec systemctl "$1" ddns-go.service ddns-go-config.path
+	;;
+enabled)
+	exec systemctl is-enabled --quiet ddns-go.service
+	;;
+*)
+	exit 2
+	;;
+esac

@@ -1,0 +1,43 @@
+#!/bin/sh
+set -eu
+
+root=${IPKG_INSTROOT:-}
+case "${1:-}" in
+postinst)
+	if [ -n "$root" ]; then
+		if [ "${PKG_UPGRADE:-0}" != 1 ]; then
+			if [ "$(readlink "$root/etc/systemd/system/ddns-go.service" 2>/dev/null || :)" != /dev/null ]; then
+				wants=$root/etc/systemd/system/multi-user.target.wants
+				mkdir -p "$wants"
+				if [ ! -e "$wants/ddns-go.service" ] && [ ! -L "$wants/ddns-go.service" ]; then
+					ln -s /usr/lib/systemd/system/ddns-go.service "$wants/ddns-go.service"
+				fi
+				if [ ! -e "$wants/ddns-go-config.path" ] && [ ! -L "$wants/ddns-go-config.path" ]; then
+					ln -s /usr/lib/systemd/system/ddns-go-config.path "$wants/ddns-go-config.path"
+				fi
+			fi
+		fi
+		exit 0
+	fi
+	[ -d /run/systemd/system ] || exit 0
+	systemctl daemon-reload
+	for mask in /etc/systemd/system/ddns-go.service /run/systemd/system/ddns-go.service; do
+		[ "$(readlink "$mask" 2>/dev/null || :)" != /dev/null ] || exit 0
+	done
+	if [ "${PKG_UPGRADE:-0}" != 1 ]; then
+		systemctl enable ddns-go.service ddns-go-config.path
+		systemctl --no-block start ddns-go.service
+	else
+		systemctl try-restart ddns-go.service
+	fi
+	;;
+prerm)
+	[ -z "$root" ] && [ -d /run/systemd/system ] || exit 0
+	[ "${PKG_UPGRADE:-0}" != 1 ] || exit 0
+	systemctl stop ddns-go-config.path ddns-go-reconfigure.service ddns-go.service
+	systemctl disable ddns-go.service ddns-go-config.path
+	;;
+*)
+	exit 2
+	;;
+esac
